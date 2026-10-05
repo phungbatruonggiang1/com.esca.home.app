@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io' show Platform;
-import 'dart:ui' show FontFeature;
 
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
@@ -160,8 +159,8 @@ class _SensorRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: const [
+    return const Row(
+      children: [
         Expanded(
           child: _SensorCard(
               label: 'Nhiệt độ', value: '28.4', unit: '°C', icon: Icons.thermostat),
