@@ -4,6 +4,8 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 
+import 'camera_screen.dart';
+
 /// One controllable thing in the house. State lives in memory only: the point
 /// of the sample is the UI and the renderer, not a real home automation bus.
 class Device {
@@ -92,6 +94,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                     ],
                   ),
+                  const SizedBox(height: 20),
+                  Text('Camera', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 12),
+                  const _CameraCard(),
                   const SizedBox(height: 20),
                   _RuntimePanel(frames: _frames),
                 ],
@@ -270,6 +276,54 @@ class _DeviceCard extends StatelessWidget {
                 ),
               ),
               Switch(value: device.isOn, onChanged: onChanged),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Opens the live preview. The frames come from the ESCA camera service as
+/// MJPEG over HTTP, so this app needs no camera plugin and no native code.
+class _CameraCard extends StatelessWidget {
+  const _CameraCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const CameraScreen()),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(Icons.photo_camera_outlined, color: scheme.primary),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Camera trước cửa',
+                        style: Theme.of(context).textTheme.titleSmall),
+                    Text('Xem trực tiếp · IMX219',
+                        style: Theme.of(context).textTheme.bodySmall),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right),
             ],
           ),
         ),
