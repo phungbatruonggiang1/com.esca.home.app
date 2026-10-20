@@ -1,37 +1,25 @@
 import 'package:flutter/material.dart';
 
+import 'app_manager.dart';
 import 'home_screen.dart';
+import 'kit/theme.dart';
 
 void main() {
-  runApp(const EscaHomeApp());
+  runApp(EscaHomeApp(controller: AppManagerController(DBusAppManagerBackend())));
 }
 
 class EscaHomeApp extends StatelessWidget {
-  const EscaHomeApp({super.key});
+  const EscaHomeApp({super.key, required this.controller});
+
+  final AppManagerController controller;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF00B3A4),
-      brightness: Brightness.dark,
-    );
-
     return MaterialApp(
       title: 'ESCA Home',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: scheme,
-        useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFF101418),
-        cardTheme: CardThemeData(
-          color: const Color(0xFF18202A),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-        ),
-      ),
-      home: const HomeScreen(),
+      theme: escaTheme(),
+      home: HomeScreen(controller: controller),
     );
   }
 }

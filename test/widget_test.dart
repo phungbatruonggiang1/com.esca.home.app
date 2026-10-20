@@ -1,30 +1,99 @@
+import 'dart:async';
+
+import 'package:esca_home/app_manager.dart';
+import 'package:esca_home/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:esca_home/main.dart';
+/// Stands in for esca-appmanagerd.
+class FakeBackend implements AppManagerBackend {
+  final launched = <String>[];
+  final instances = <RunningInstance>[];
+  final events = StreamController<LifeEvent>.broadcast();
+  String? refuseWith;
+  Set<String> up = {'vn.sparc.esca.AppManager1', 'vn.sparc.esca.Camera1'};
 
-void main() {
-  testWidgets('dashboard shows its sections and toggles a device',
-      (WidgetTester tester) async {
-    await tester.pumpWidget(const EscaHomeApp());
+  @override
+  Future<List<RunningInstance>> running() async => List.of(instances);
 
-    expect(find.text('ESCA Home'), findsOneWidget);
-    expect(find.text('Thiết bị'), findsOneWidget);
-    expect(find.text('Thông tin runtime'), findsOneWidget);
+  @override
+  Future<String> launch(String appId) async {
+    if (refuseWith != null) throw AppManagerException(refuseWith!);
+    launched.add(appId);
+    instances.add(RunningInstance(appId, '$appId-1', 'running'));
+    return '$appId-1';
+  }
 
-    // The ceiling light starts on, the air conditioner starts off.
-    final acSwitch = find.ancestor(
-      of: find.text('Điều hoà'),
-      matching: find.byType(Card),
-    );
-    expect(acSwitch, findsOneWidget);
+  @override
+  Future<void> closeApp(String appId) async => instances.removeWhere((r) => r.appId == appId);
 
-    final switchFinder = find.descendant(of: acSwitch, matching: find.byType(Switch));
-    expect(tester.widget<Switch>(switchFinder).value, isFalse);
+  @override
+  Stream<LifeEvent> get lifeEvents => events.stream;
 
-    await tester.tap(switchFinder);
+  @override
+  Future<Map<String, bool>> present(Iterable<String> names) async =>
+      {for (final name in names) name: up.contains(name)};
+
+  @override
+  Future<void> dispose() async => events.close();
+}
+
+/// Runs [body] against Home on a 1920x1200 screen backed by a [FakeBackend].
+/// The controller is disposed inside the test, because its poll timer must
+/// be gone before the test binding checks for pending timers.
+void homeTest(String description, Future<void> Function(WidgetTester, FakeBackend) body) {
+  testWidgets(description, (tester) async {
+    tester.view.physicalSize = const Size(1920, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final backend = FakeBackend();
+    final controller = AppManagerController(backend);
+    await tester.pumpWidget(EscaHomeApp(controller: controller));
     await tester.pump();
 
-    expect(tester.widget<Switch>(switchFinder).value, isTrue);
+    await body(tester, backend);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    controller.dispose();
+  });
+}
+
+void main() {
+  homeTest('shows the three applications and the service states', (tester, backend) async {
+    expect(find.text('Camera AI'), findsOneWidget);
+    expect(find.text('Giám sát âm thanh'), findsOneWidget);
+    expect(find.text('Trợ lý giọng nói'), findsOneWidget);
+    // Four of the six services are not on the fake bus.
+    expect(find.text('4 dịch vụ đang dừng'), findsOneWidget);
+  });
+
+  homeTest('clicking an application asks the manager to launch it', (tester, backend) async {
+    await tester.tap(find.text('Giám sát âm thanh'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(backend.launched, ['vn.sparc.esca.monitor']);
+    expect(find.text('Đang chạy'), findsOneWidget);
+  });
+
+  homeTest('a refusal from the manager is shown, not swallowed', (tester, backend) async {
+    backend.refuseWith = 'no such application';
+
+    await tester.tap(find.text('Camera AI'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Camera AI: no such application'), findsOneWidget);
+  });
+
+  homeTest('a device tile toggles', (tester, backend) async {
+    final tile = find.ancestor(of: find.text('Điều hoà'), matching: find.byType(InkWell)).first;
+    final toggle = find.descendant(of: tile, matching: find.byType(Switch));
+    expect(tester.widget<Switch>(toggle).value, isFalse);
+
+    await tester.tap(toggle);
+    await tester.pump();
+    expect(tester.widget<Switch>(toggle).value, isTrue);
   });
 }

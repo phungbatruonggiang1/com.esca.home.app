@@ -1,72 +1,53 @@
-# com.esca.home.app
+# ESCA Home
 
-A smart-home dashboard in Flutter, written to answer one question: does a
-Flutter UI run on a Raspberry Pi 4 booted from `esca-image`?
+The dashboard the Raspberry Pi 4 boots into: it opens every other ESCA
+application, shows which services are up, and carries the smart-home tiles.
 
-It shows a clock, three sensor cards, six device tiles you can toggle, and a
-runtime panel listing the OS, kernel, hostname, Dart version, screen geometry
-and a frame counter. That panel is the actual test: read it on the board and you
-know the app is running there, in release mode, and still drawing frames.
+## Opening an application
 
-No third-party packages, by design. A plugin would have to be cross-compiled
-and packaged for the target as well, which is a different problem from the one
-this sample is here to settle.
+Each tile asks `esca-appmanagerd` (`vn.sparc.esca.AppManager1`) to launch the
+application; Home never starts one itself. The manager is what drops
+privileges, sets the Wayland environment and reports exits — an application
+started behind its back would be invisible to it.
+
+The manager's bus policy admits only root and the `appmanager` group, so the
+`weston` user Home runs as must be in that group (`esca-image.bb` does it).
+
+An application that is already open is restarted when its tile is pressed:
+Weston gives one client no way to raise another's window, and a press that
+did nothing would look broken. Each application returns here by exiting.
+
+## What is live and what is not
+
+Live: which applications are running (`Running`, `AppLifeStatusChanged`) and
+which services own their names on the system bus.
+
+Not yet: the environment readings and device tiles are the smart-home side
+of the demo, held in memory only.
 
 ## Layout
 
-    pubspec.yaml            no dependencies beyond the Flutter SDK
-    lib/main.dart           app entry point and theme
-    lib/home_screen.dart    the dashboard, its widgets, and the runtime panel
+    lib/app_manager.dart   esca-appmanagerd over D-Bus, and the dashboard's state
+    lib/home_screen.dart   the dashboard
+    lib/kit/               the shared ESCA look
 
-`linux/` is not in the repository. Generate it when you need a desktop build:
+`linux/` is not in the repository; generate it with
+`flutter create --platforms=linux --project-name esca_home .` when a desktop
+build is wanted.
 
-```bash
-flutter create --platforms=linux --project-name esca_home .
-```
+## Building and testing on the development host
 
-That command adds the missing platform scaffolding and leaves `lib/` alone;
-check `git status` afterwards anyway.
+    flutter pub get
+    flutter analyze
+    flutter test
 
-## Getting it onto the Pi 4
+The tests drive the screen against a fake service, so they need neither the
+board nor the bus. `pubspec.lock` is committed: the Yocto build resolves the
+same package versions the tests ran against.
 
-### Through Yocto, with meta-flutter (the real route)
+On the board the bundle is built by its recipe in `meta-sparc-esca`
+(`esca-flutter-app.inc`), run by `ivi-homescreen` inside the Weston session,
+and started by `esca-appmanagerd` through the launcher in `/usr/bin`.
 
-`meta-flutter` has a `wrynose` branch, matching the oe-core that build-esca
-uses, so it drops into `escalayers.py` like any other layer. It carries the
-Flutter engine and two ways to run an app under the image's Weston session:
-
-- `flutter-auto` (ivi-homescreen) — a Wayland client, which is what
-  `esca-image` already has a compositor for.
-- `flutter-pi` — renders straight to DRM/KMS, no compositor at all.
-
-The app itself becomes a recipe that builds the bundle and installs it, with
-`meta-flutter`'s own app recipes as the pattern to copy. Expect the engine build
-to be heavy.
-
-### Without rebuilding the image (quick check)
-
-The development host here is aarch64, the same architecture as the Pi, so a
-desktop build runs on the board without cross-compiling:
-
-```bash
-flutter build linux --release
-scp -r build/linux/arm64/release/bundle root@192.168.1.43:/home/root/esca-home
-```
-
-Then on the board, inside the Weston session:
-
-```bash
-/home/root/esca-home/esca_home
-```
-
-Two things have to line up for this to work: the image needs GTK 3, which
-`core-image-weston` has (it ships `gtk+3-demo`), and the host's glibc must not
-be newer than the image's. It is the fast way to get a first answer, not the way
-to ship.
-
-## Status
-
-Written, but never compiled or run: there is no Flutter SDK on this machine
-(`flutter` and `dart` are both missing), so the code has not been through
-`flutter analyze` or a build. Treat the first `flutter build` as part of the
-review.
+`lib/kit/` is the shared ESCA look, copied identically into every
+application. Change one copy, copy it to the others.
