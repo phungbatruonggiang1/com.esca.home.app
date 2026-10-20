@@ -234,7 +234,9 @@ class _Header extends StatelessWidget {
           ],
         ),
         const SizedBox(width: 24),
-        StatusPill(label: label, color: color, live: down == 0 && controller.managerReachable),
+        // Static: a dot pulsing forever keeps the engine drawing at 60 Hz for as
+        // long as the board is up, even with an application covering Home.
+        StatusPill(label: label, color: color),
         const Spacer(),
         const _Clock(),
       ],
@@ -417,7 +419,7 @@ class _StateBadge extends StatelessWidget {
       duration: const Duration(milliseconds: 250),
       child: switch (state) {
         AppState.running =>
-          StatusPill(key: const ValueKey('running'), label: 'Đang chạy', color: color, live: true),
+          StatusPill(key: const ValueKey('running'), label: 'Đang chạy', color: color),
         AppState.opening => const StatusPill(
             key: ValueKey('opening'), label: 'Đang mở…', color: EscaColors.warn, live: true),
         AppState.stopped => const SizedBox.shrink(key: ValueKey('stopped')),
