@@ -62,19 +62,20 @@ void homeTest(String description, Future<void> Function(WidgetTester, FakeBacken
 void main() {
   homeTest('shows the three applications and the service states', (tester, backend) async {
     expect(find.text('Camera AI'), findsOneWidget);
-    expect(find.text('Giám sát âm thanh'), findsOneWidget);
-    expect(find.text('Trợ lý giọng nói'), findsOneWidget);
+    expect(find.text('Sound Monitor'), findsOneWidget);
+    expect(find.text('Voice Assistant'), findsOneWidget);
     // Four of the six services are not on the fake bus.
-    expect(find.text('4 dịch vụ đang dừng'), findsOneWidget);
+    expect(find.text('4 services stopped'), findsOneWidget);
   });
 
   homeTest('clicking an application asks the manager to launch it', (tester, backend) async {
-    await tester.tap(find.text('Giám sát âm thanh'));
+    await tester.tap(find.text('Sound Monitor'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(backend.launched, ['vn.sparc.esca.monitor']);
-    expect(find.text('Đang chạy'), findsOneWidget);
+    // 'Running' also labels every live service; 'Reopen' is the tile's own.
+    expect(find.text('Reopen'), findsOneWidget);
   });
 
   homeTest('a refusal from the manager is shown, not swallowed', (tester, backend) async {
@@ -88,7 +89,8 @@ void main() {
   });
 
   homeTest('a device tile toggles', (tester, backend) async {
-    final tile = find.ancestor(of: find.text('Điều hoà'), matching: find.byType(InkWell)).first;
+    final tile =
+        find.ancestor(of: find.text('Air conditioner'), matching: find.byType(InkWell)).first;
     final toggle = find.descendant(of: tile, matching: find.byType(Switch));
     expect(tester.widget<Switch>(toggle).value, isFalse);
 

@@ -33,11 +33,11 @@ class EscaApp {
 /// The services Home reports on, in the order they are drawn.
 const kEscaServices = <String, String>{
   'vn.sparc.esca.Camera1': 'Camera',
-  'vn.sparc.esca.Vision1': 'Nhận diện vật thể',
-  'vn.sparc.esca.Audio1': 'Âm thanh',
-  'vn.sparc.esca.Anomaly1': 'Phát hiện bất thường',
-  'vn.sparc.esca.Voice1': 'Giọng nói',
-  'vn.sparc.esca.AppManager1': 'Quản lý ứng dụng',
+  'vn.sparc.esca.Vision1': 'Object detection',
+  'vn.sparc.esca.Audio1': 'Audio',
+  'vn.sparc.esca.Anomaly1': 'Anomaly detection',
+  'vn.sparc.esca.Voice1': 'Voice',
+  'vn.sparc.esca.AppManager1': 'Application manager',
 };
 
 class LifeEvent {
@@ -140,7 +140,7 @@ class DBusAppManagerBackend implements AppManagerBackend {
     final reply = await _object.callMethod(_interface, 'GetErrorMessage', const [],
         replySignature: DBusSignature('s'));
     final message = reply.values.first.asString();
-    return message.isEmpty ? 'Không mở được ứng dụng' : message;
+    return message.isEmpty ? 'The application could not be opened' : message;
   }
 
   @override
@@ -249,7 +249,7 @@ class AppManagerController extends ChangeNotifier {
       _error = '${app.title}: ${e.message}';
     } catch (e) {
       _states[app.id] = AppState.stopped;
-      _error = '${app.title}: không liên lạc được esca-appmanagerd';
+      _error = '${app.title}: cannot reach esca-appmanagerd';
     }
     notifyListeners();
   }

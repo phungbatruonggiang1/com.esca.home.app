@@ -22,7 +22,7 @@ const kApps = [
     EscaApp(
       id: 'vn.sparc.esca.camview',
       title: 'Camera AI',
-      summary: 'Hình ảnh trực tiếp từ camera, vật thể được nhận diện ngay trên board.',
+      summary: 'Live camera view, with objects detected right on the board.',
       service: 'vn.sparc.esca.Camera1',
     ),
     Icons.videocam_rounded,
@@ -31,8 +31,8 @@ const kApps = [
   AppEntry(
     EscaApp(
       id: 'vn.sparc.esca.monitor',
-      title: 'Giám sát âm thanh',
-      summary: 'Lắng nghe máy móc và cảnh báo ngay khi có tiếng động bất thường.',
+      title: 'Sound Monitor',
+      summary: 'Listens to the machine and raises an alarm on abnormal sound.',
       service: 'vn.sparc.esca.Anomaly1',
     ),
     Icons.graphic_eq_rounded,
@@ -41,8 +41,8 @@ const kApps = [
   AppEntry(
     EscaApp(
       id: 'vn.sparc.esca.voiceapp',
-      title: 'Trợ lý giọng nói',
-      summary: 'Nhấn để nói, xem văn bản nhận dạng được và nghe đọc lại.',
+      title: 'Voice Assistant',
+      summary: 'Press to talk, read what was heard, and hear it read back.',
       service: 'vn.sparc.esca.Voice1',
     ),
     Icons.mic_rounded,
@@ -72,12 +72,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final List<Device> _devices = [
-    Device('Đèn trần', 'Phòng khách', Icons.lightbulb_outline_rounded, isOn: true),
-    Device('Điều hoà', 'Phòng khách', Icons.ac_unit_rounded),
-    Device('Quạt hút', 'Nhà bếp', Icons.air_rounded),
-    Device('Bình nóng lạnh', 'Phòng tắm', Icons.hot_tub_rounded),
-    Device('Cửa cuốn', 'Nhà xe', Icons.garage_outlined),
-    Device('Đèn sân', 'Ngoài trời', Icons.light_outlined, isOn: true),
+    Device('Ceiling light', 'Living room', Icons.lightbulb_outline_rounded, isOn: true),
+    Device('Air conditioner', 'Living room', Icons.ac_unit_rounded),
+    Device('Exhaust fan', 'Kitchen', Icons.air_rounded),
+    Device('Water heater', 'Bathroom', Icons.hot_tub_rounded),
+    Device('Roller door', 'Garage', Icons.garage_outlined),
+    Device('Yard light', 'Outdoors', Icons.light_outlined, isOn: true),
   ];
 
   @override
@@ -101,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _Header(controller: widget.controller),
                       FaultBanner(message: widget.controller.error),
                       SizedBox(height: wide ? 36 : 24),
-                      const SectionTitle('Ứng dụng'),
+                      const SectionTitle('Applications'),
                       _AppGrid(controller: widget.controller, wide: wide),
                       SizedBox(height: wide ? 36 : 24),
                       if (wide)
@@ -135,30 +135,30 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SectionTitle('Môi trường'),
+        const SectionTitle('Environment'),
         const Row(
           children: [
             Expanded(
               child: MetricTile(
-                  label: 'Nhiệt độ', value: '28.4', unit: '°C', icon: Icons.thermostat_rounded),
+                  label: 'Temperature', value: '28.4', unit: '°C', icon: Icons.thermostat_rounded),
             ),
             SizedBox(width: 16),
             Expanded(
               child: MetricTile(
-                  label: 'Độ ẩm', value: '62', unit: '%', icon: Icons.water_drop_outlined),
+                  label: 'Humidity', value: '62', unit: '%', icon: Icons.water_drop_outlined),
             ),
             SizedBox(width: 16),
             Expanded(
               child: MetricTile(
-                  label: 'Điện tiêu thụ', value: '1.8', unit: 'kW', icon: Icons.bolt_rounded),
+                  label: 'Power draw', value: '1.8', unit: 'kW', icon: Icons.bolt_rounded),
             ),
           ],
         ),
         const SizedBox(height: 28),
         SectionTitle(
-          'Thiết bị',
+          'Devices',
           trailing: Text(
-            '${_devices.where((d) => d.isOn).length}/${_devices.length} đang bật',
+            '${_devices.where((d) => d.isOn).length} of ${_devices.length} on',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ),
@@ -194,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SectionTitle('Dịch vụ hệ thống'),
+        const SectionTitle('System services'),
         if (fill) Expanded(child: services) else services,
         const SizedBox(height: 16),
         const _RuntimeCard(),
@@ -213,10 +213,10 @@ class _Header extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final down = controller.services.values.where((up) => !up).length;
     final (label, color) = !controller.managerReachable
-        ? ('Mất kết nối hệ thống', EscaColors.bad)
+        ? ('System unreachable', EscaColors.bad)
         : down == 0
-            ? ('Hệ thống hoạt động ổn định', EscaColors.good)
-            : ('$down dịch vụ đang dừng', EscaColors.warn);
+            ? ('All systems running', EscaColors.good)
+            : (down == 1 ? '1 service stopped' : '$down services stopped', EscaColors.warn);
 
     return Row(
       children: [
@@ -227,7 +227,7 @@ class _Header extends StatelessWidget {
           children: [
             Text('ESCA Home', style: text.headlineMedium),
             const SizedBox(height: 2),
-            Text('Nhà của Giang · Raspberry Pi 4',
+            Text('Giang\'s home · Raspberry Pi 4',
                 style: text.bodyMedium?.copyWith(
                   color: EscaColors.textDim,
                 )),
@@ -258,13 +258,27 @@ class _ClockState extends State<_Clock> {
   DateTime _now = DateTime.now();
 
   static const _weekdays = [
-    'Thứ Hai',
-    'Thứ Ba',
-    'Thứ Tư',
-    'Thứ Năm',
-    'Thứ Sáu',
-    'Thứ Bảy',
-    'Chủ Nhật'
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
+  ];
+  static const _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
   ];
 
   @override
@@ -297,7 +311,7 @@ class _ClockState extends State<_Clock> {
         ),
         const SizedBox(height: 6),
         Text(
-          '${_weekdays[_now.weekday - 1]}, ${_two(_now.day)}/${_two(_now.month)}/${_now.year}',
+          '${_weekdays[_now.weekday - 1]}, ${_now.day} ${_months[_now.month - 1]} ${_now.year}',
           style: text.bodyMedium?.copyWith(color: EscaColors.textDim),
         ),
       ],
@@ -394,7 +408,7 @@ class _AppTile extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                serviceUp ? 'Dịch vụ sẵn sàng' : 'Dịch vụ chưa chạy',
+                serviceUp ? 'Service ready' : 'Service not running',
                 style: text.bodySmall,
               ),
               const Spacer(),
@@ -419,9 +433,9 @@ class _StateBadge extends StatelessWidget {
       duration: const Duration(milliseconds: 250),
       child: switch (state) {
         AppState.running =>
-          StatusPill(key: const ValueKey('running'), label: 'Đang chạy', color: color),
+          StatusPill(key: const ValueKey('running'), label: 'Running', color: color),
         AppState.opening => const StatusPill(
-            key: ValueKey('opening'), label: 'Đang mở…', color: EscaColors.warn, live: true),
+            key: ValueKey('opening'), label: 'Opening…', color: EscaColors.warn, live: true),
         AppState.stopped => const SizedBox.shrink(key: ValueKey('stopped')),
       },
     );
@@ -447,7 +461,7 @@ class _OpenLabel extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          state == AppState.running ? 'Mở lại' : 'Mở ứng dụng',
+          state == AppState.running ? 'Reopen' : 'Open',
           style: TextStyle(color: color, fontWeight: FontWeight.w600),
         ),
         const SizedBox(width: 6),
@@ -528,7 +542,7 @@ class _ServicesCard extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(child: Text(entry.value, style: text.bodyLarge)),
                   Text(
-                    (controller.services[entry.key] ?? false) ? 'Hoạt động' : 'Đã dừng',
+                    (controller.services[entry.key] ?? false) ? 'Running' : 'Stopped',
                     style: text.bodySmall?.copyWith(
                       color: (controller.services[entry.key] ?? false)
                           ? EscaColors.good
@@ -556,11 +570,11 @@ class _RuntimeCard extends StatelessWidget {
     final view = View.of(context);
     final size = view.physicalSize;
     final rows = <(String, String)>[
-      ('Máy', Platform.localHostname),
+      ('Host', Platform.localHostname),
       ('Kernel', Platform.operatingSystemVersion.split(' ').take(3).join(' ')),
       ('Dart', Platform.version.split(' ').first),
-      ('Màn hình', '${size.width.toInt()}×${size.height.toInt()}'),
-      ('Bản dựng', kReleaseMode ? 'release' : 'debug'),
+      ('Display', '${size.width.toInt()}×${size.height.toInt()}'),
+      ('Build', kReleaseMode ? 'release' : 'debug'),
     ];
 
     return EscaCard(
@@ -572,7 +586,7 @@ class _RuntimeCard extends StatelessWidget {
             children: [
               const Icon(Icons.memory_rounded, size: 18, color: EscaColors.textDim),
               const SizedBox(width: 8),
-              Text('Thông tin runtime', style: text.titleSmall),
+              Text('Runtime', style: text.titleSmall),
             ],
           ),
           const SizedBox(height: 12),
