@@ -37,6 +37,7 @@ const kEscaServices = <String, String>{
   'vn.sparc.esca.Audio1': 'Audio',
   'vn.sparc.esca.Anomaly1': 'Anomaly detection',
   'vn.sparc.esca.Voice1': 'Voice',
+  'vn.sparc.esca.Settings1': 'Network settings',
   'vn.sparc.esca.AppManager1': 'Application manager',
 };
 

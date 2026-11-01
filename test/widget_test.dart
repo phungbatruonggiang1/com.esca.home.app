@@ -60,12 +60,13 @@ void homeTest(String description, Future<void> Function(WidgetTester, FakeBacken
 }
 
 void main() {
-  homeTest('shows the three applications and the service states', (tester, backend) async {
+  homeTest('shows the four applications and the service states', (tester, backend) async {
     expect(find.text('Camera AI'), findsOneWidget);
     expect(find.text('Sound Monitor'), findsOneWidget);
     expect(find.text('Voice Assistant'), findsOneWidget);
-    // Four of the six services are not on the fake bus.
-    expect(find.text('4 services stopped'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+    // Five of the seven services are not on the fake bus.
+    expect(find.text('5 services stopped'), findsOneWidget);
   });
 
   homeTest('clicking an application asks the manager to launch it', (tester, backend) async {

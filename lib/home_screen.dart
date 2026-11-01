@@ -48,6 +48,16 @@ const kApps = [
     Icons.mic_rounded,
     EscaColors.accent,
   ),
+  AppEntry(
+    EscaApp(
+      id: 'vn.sparc.esca.settings',
+      title: 'Settings',
+      summary: 'Wi-Fi, Ethernet and Bluetooth: connect the board and its devices.',
+      service: 'vn.sparc.esca.Settings1',
+    ),
+    Icons.settings_rounded,
+    EscaColors.warn,
+  ),
 ];
 
 /// One controllable thing in the house. Kept in memory only: these tiles are
